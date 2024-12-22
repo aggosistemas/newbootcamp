@@ -5,5 +5,6 @@ resource "aws_instance" "myEC2" {
    tags = {
     Name = "terraform-instance"
     CentroCusto ="Financeiro"
+    Departamento = "TI"
   }
 }
