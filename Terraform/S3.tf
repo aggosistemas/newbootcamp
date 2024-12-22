@@ -5,5 +5,6 @@ resource "aws_s3_bucket" "myBuckets3" {
     Name        = "My first s3"
     Environment = "Dev"
     CentroCusto = "Financeiro"
+    Departamento = "TI"
   }
 }
