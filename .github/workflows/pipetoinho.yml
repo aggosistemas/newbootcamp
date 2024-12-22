@@ -2,19 +2,21 @@
 name: Terraform AWS Pipeline
 
 on:
-  pull_request:
-    branches:
-      - main
-
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Escolha a ação a ser executada: apply ou destroy"
+        required: true
+        default: "apply" # Valor padrão
+        type: choice
+        options:
+          - apply
+          - destroy
 
 jobs:
   terraform:
     name: Terraform Workflow
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true # Executa apenas se o PR foi mesclado
 
     steps:
       # Checkout do código no repositório
