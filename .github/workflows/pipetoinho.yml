@@ -43,28 +43,28 @@ jobs:
       # Inicializar o Terraform
       - name: Terraform Init
         run: terraform init
-        working-directory: terraform/
+        working-directory: Terraform/
 
       # Validar os arquivos Terraform
       - name: Terraform Validate
         run: terraform validate
-        working-directory: terraform/
+        working-directory: Terraform/
 
       # Planejar as mudanças
       - name: Terraform Plan
         id: plan
         run: terraform plan -out=tfplan
-        working-directory: terraform/
+        working-directory: Terraform/
 
       # Exibir o plano (opcional)
       - name: Show Terraform Plan Output
         run: |
           echo "Plan stdout:"
           terraform show tfplan
-        working-directory: terraform/
+        working-directory: Terraform/
 
       # Aplicar as mudanças
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' # Só aplica no branch main
         run: terraform apply -auto-approve tfplan
-        working-directory: terraform/
+        working-directory: Terraform/
