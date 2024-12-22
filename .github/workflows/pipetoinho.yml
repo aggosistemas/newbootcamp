@@ -7,7 +7,7 @@ on:
       action:
         description: "Escolha a ação a ser executada: apply ou destroy"
         required: true
-        default: "apply" # Valor padrão
+        default: "apply"
         type: choice
         options:
           - apply
@@ -23,7 +23,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      # Passo para listar os arquivos do repositório (opcional para depuração)
+      # Listar arquivos do repositório (para depuração)
       - name: List Repository Files
         run: ls -R
 
@@ -33,13 +33,13 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ca-central-1 # Altere para sua região
+          aws-region: ca-central-1
 
       # Instalar o Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.1.7 # Use uma versão adequada
+          terraform_version: 1.1.7
           terraform_wrapper: false
 
       # Inicializar o Terraform
@@ -52,23 +52,27 @@ jobs:
         run: terraform validate
         working-directory: Terraform/
 
-      # Planejar as mudanças
-      - name: Terraform Plan
+      # Planejar as mudanças (para apply)
+      - name: Terraform Plan for Apply
+        if: github.event.inputs.action == 'apply'
         id: plan
         run: terraform plan -out=tfplan
         working-directory: Terraform/
 
-      # Decisão entre apply ou destroy
-      - name: Terraform Apply or Destroy
-        run: |
-          if [ "${{ github.event.inputs.action }}" == "apply" ]; then
-            echo "Executando Terraform Apply..."
-            terraform apply -auto-approve tfplan
-          elif [ "${{ github.event.inputs.action }}" == "destroy" ]; then
-            echo "Executando Terraform Destroy..."
-            terraform destroy -auto-approve
-          else
-            echo "Ação inválida: ${GITHUB_INPUT_ACTION}"
-            exit 1
-          fi
+      # Executar Terraform Apply
+      - name: Terraform Apply
+        if: github.event.inputs.action == 'apply'
+        run: terraform apply -auto-approve tfplan
+        working-directory: Terraform/
+
+      # Planejar as mudanças (para destroy)
+      - name: Terraform Plan for Destroy
+        if: github.event.inputs.action == 'destroy'
+        run: terraform plan -destroy -out=tfdestroy
+        working-directory: Terraform/
+
+      # Executar Terraform Destroy
+      - name: Terraform Destroy
+        if: github.event.inputs.action == 'destroy'
+        run: terraform apply -auto-approve tfdestroy
         working-directory: Terraform/
