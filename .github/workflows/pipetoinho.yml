@@ -1,10 +1,12 @@
+# .github/workflows/main.yml
 name: Terraform AWS Pipeline
 
 on:
-  push:
+  pull_request:
     branches:
       - main
-  pull_request:
+
+  push:
     branches:
       - main
 
@@ -12,20 +14,18 @@ jobs:
   terraform:
     name: Terraform Workflow
     runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true # Executa apenas se o PR foi mesclado
 
     steps:
       # Checkout do código no repositório
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      # Passos de Depuração (Remova após confirmação)
-      - name: Print Current Directory
-        run: pwd
-
+      # Passo para listar os arquivos do repositório (opcional para depuração)
       - name: List Repository Files
         run: ls -R
 
-      # Configurar as Credenciais AWS com Secrets
+      # Configurar Credenciais AWS com Secrets
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v3
         with:
@@ -37,8 +37,8 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.1.7 # Use a versão adequada
-          terraform_wrapper: false # Evita usar o wrapper do Terraform
+          terraform_version: 1.1.7 # Use uma versão adequada
+          terraform_wrapper: false
 
       # Inicializar o Terraform
       - name: Terraform Init
@@ -56,15 +56,17 @@ jobs:
         run: terraform plan -out=tfplan
         working-directory: Terraform/
 
-      # Exibir o plano (opcional)
-      - name: Show Terraform Plan Output
+      # Decisão entre apply ou destroy
+      - name: Terraform Apply or Destroy
         run: |
-          echo "Plan stdout:"
-          terraform show tfplan
-        working-directory: Terraform/
-
-      # Aplicar as mudanças
-      - name: Terraform Apply
-        if: github.ref == 'refs/heads/main' # Só aplica no branch main
-        run: terraform apply -auto-approve tfplan
+          if [ "${{ github.event.inputs.action }}" == "apply" ]; then
+            echo "Executando Terraform Apply..."
+            terraform apply -auto-approve tfplan
+          elif [ "${{ github.event.inputs.action }}" == "destroy" ]; then
+            echo "Executando Terraform Destroy..."
+            terraform destroy -auto-approve
+          else
+            echo "Ação inválida: ${GITHUB_INPUT_ACTION}"
+            exit 1
+          fi
         working-directory: Terraform/
