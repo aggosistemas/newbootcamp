@@ -29,9 +29,10 @@ jobs:
 
       # Instalar o Terraform
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2.1.0
+        uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 5.82.2 # Use a versão adequada
+          terraform_version: 1.1.7 # Use a versão adequada
+          terraform_wrapper: false # Evita usar o wrapper do Terraform
 
       # Inicializar o Terraform
       - name: Terraform Init
@@ -48,6 +49,12 @@ jobs:
         id: plan
         run: terraform plan -out=tfplan
         working-directory: terraform/
+
+      # Exibir o plano
+      - name: Show Terraform Plan Output
+        run: |
+          echo "Plan stdout:"
+          terraform show tfplan
 
       # Aplicar as mudanças
       - name: Terraform Apply
